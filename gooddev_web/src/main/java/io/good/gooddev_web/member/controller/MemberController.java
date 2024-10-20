@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -38,7 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Controller
 @Slf4j
-@RequestMapping("/member")
+@RequestMapping("/api/member")
 @RequiredArgsConstructor
 public class MemberController {
 
@@ -57,22 +58,14 @@ public class MemberController {
         return "member/list";
     }
 
-    // 회원 가입 페이지로 이동
-    @GetMapping("register") //  HTTP GET 요청을 처리
-    //사용자가 브라우저에서 ..../member/register URL을 요청했을 때 이 메서드가 호출된다.
-    public String registerForm(Model model) //Controller -> View(JSP)로 데이터를 전달
-    {
-        model.addAttribute("memberDTO", new MemberDTO());
-        return "member/register";
-    }
-    
     // 회원 가입 처리 POST
     @PostMapping("register")
-    public String register(@Validated @ModelAttribute("memberDTO") MemberDTO memberDTO, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
+    public ResponseEntity<Map<String,Boolean>> register(@RequestBody MemberDTO memberDTO) {
         log.info("회원가입 요청 처리 중");
-        memberService.register(mapperUtil.map(memberDTO, MemberVO.class)); //서비스 레이어에서 처리
-        redirectAttributes.addFlashAttribute("message", "회원 가입이 성공적으로 완료되었습니다.");
-        return "redirect:/";
+        Map<String,Boolean> response = new HashMap<>();
+        int result = memberService.register(mapperUtil.map(memberDTO, MemberVO.class));
+        response.put("success",result==1);
+        return ResponseEntity.ok(response);
     }
 
     // 회원 정보 수정 GET
@@ -82,6 +75,7 @@ public class MemberController {
         model.addAttribute("memberDTO", member);
         return "member/modify";
     }
+    
     // 회원 정보 수정 POST처리
     @PostMapping("modify")
     public String modifyMember(@Validated @ModelAttribute("memberVO") MemberDTO memberDTO, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
@@ -129,9 +123,9 @@ public class MemberController {
         return "redirect:/member/findid"; 
     }
     // 이메일 중복 체크 : 비동기 통신 사용
-    @PostMapping("/checkEmailDuplicate")
+    @GetMapping("/checkEmailDuplicate/{email}")
     @ResponseBody
-    public String checkEmailDuplicate(@RequestParam("email") String email) {
+    public String checkEmailDuplicate(@PathVariable String email) {
         // 이메일 형식 유효성 검사
         if (!EmailValidator.isValidEmailREGEX(email)) {
             return "invalid";
@@ -143,33 +137,35 @@ public class MemberController {
     }
 
     // 아이디 중복 체크 : 비동기 통신 사용
-        @PostMapping("/checkIdDuplicate")    
-        @ResponseBody // json 형식으로 데이터를 반환
-        public String checkIdValid(@RequestParam("mid") String mid) {
-            // 먼저 유효성 검사 (아이디 형식에 대한 정규식 검사) 수행
-            if (!IdValidator.isValidIdREGEX(mid)) {
-                return "invalid";
-            }
-            // 서비스 메서드 활용하여 중복 여부 확인
-            boolean isDuplicate = memberService.checkIdDuplicate(mid);
-            // 중복된 아이디가 있으면 "duplicate" 반환, 없으면 "available" 반환
-            if (isDuplicate) {
-                return "duplicate";
-            } else {
-                return "available";
-            }
-        } 
-        @PostMapping("/checkIdAndEmail")    
-        @ResponseBody
-        public ResponseEntity<Map<String,Boolean>> checkIdAndEmail(@RequestParam("mid") String mid,@RequestParam("email") String email) {
-            Map<String,Boolean> response = new HashMap<>();
-            if (!EmailValidator.isValidEmailREGEX(email)||!IdValidator.isValidIdREGEX(mid)|| !memberService.checkIdAndEmail(mid,email)) {
-               response.put("success",false);
-               return ResponseEntity.ok(response);
-            }
-            response.put("success",true);
+    @GetMapping("/checkIdDuplicate/{mid}")
+    @ResponseBody // json 형식으로 데이터를 반환
+    public String checkIdValid(@PathVariable String mid) {
+        
+        // 먼저 유효성 검사 (아이디 형식에 대한 정규식 검사) 수행
+        if (!IdValidator.isValidIdREGEX(mid)) {
+            return "invalid";
+        }
+        // 서비스 메서드 활용하여 중복 여부 확인
+        boolean isDuplicate = memberService.checkIdDuplicate(mid);
+        // 중복된 아이디가 있으면 "duplicate" 반환, 없으면 "available" 반환
+        if (isDuplicate) {
+            return "duplicate";
+        } else {
+            return "available";
+        }
+    } 
+        
+    @PostMapping("/checkIdAndEmail")    
+    @ResponseBody
+    public ResponseEntity<Map<String,Boolean>> checkIdAndEmail(@RequestParam("mid") String mid,@RequestParam("email") String email) {
+        Map<String,Boolean> response = new HashMap<>();
+        if (!EmailValidator.isValidEmailREGEX(email)||!IdValidator.isValidIdREGEX(mid)|| !memberService.checkIdAndEmail(mid,email)) {
+            response.put("success",false);
             return ResponseEntity.ok(response);
         }
+        response.put("success",true);
+        return ResponseEntity.ok(response);
+    }
 
     // 비밀번호 찾기 페이지로 이동 GET
     @GetMapping("findpwd")
@@ -247,16 +243,12 @@ public class MemberController {
     
     //로그인 POST처리
     @PostMapping("/login")
-    public String loginPost(HttpServletRequest request, HttpServletResponse response) {
+    public ResponseEntity<Map<String,MemberDTO>> loginPost(HttpServletRequest request, HttpServletResponse response,@RequestBody MemberDTO memberDTO) {
         try {
             HttpSession session = request.getSession();
-            String mid = request.getParameter("mid");
-            String password = request.getParameter("password");
             String auto_login_check = request.getParameter("auto_login_check");
-            String link = request.getParameter("redirect");
             if (auto_login_check == null) auto_login_check = "false";
-            MemberDTO inMember = new MemberDTO(mid, password);
-            MemberDTO member = memberService.login(mapperUtil.map(inMember, MemberVO.class), auto_login_check);
+            MemberDTO member = memberService.login(mapperUtil.map(memberDTO, MemberVO.class), auto_login_check);
             if (member != null) {
                 if (auto_login_check.equals("on")) {
                     Cookie cookie = new Cookie("autoLoginTrue", member.getAuto_Login());
@@ -268,15 +260,16 @@ public class MemberController {
                 session.setAttribute("loginInfo", member);
                 // isAdminYn 값을 세션에 추가
                 session.setAttribute("isAdminYn", String.valueOf(member.getIsAdminYn()));
-                log.info("로그인 성공: " + mid + " 세션에 저장된 mid: " + session.getAttribute("mid"));
-                return "redirect:"+(link != null&&!link.equals("null") ? URLDecoder.decode(link, "UTF-8") : "/");
+                Map<String, MemberDTO> map = new HashMap<>();
+                map.put("loginInfo",member);
+                return ResponseEntity.ok(map);
 
             } else {
-                return "redirect:login?error=error&redirect=" + (link != null && !link.equals("null")? URLEncoder.encode(link,"UTF-8") : "/");
+                return null;
             }
         } catch (Exception e) {
             e.printStackTrace(); // 로그에 오류 기록
-            return "redirect:/";
+            return null;
         }
     }
 

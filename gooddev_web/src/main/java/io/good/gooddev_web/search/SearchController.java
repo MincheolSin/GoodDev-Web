@@ -2,13 +2,12 @@ package io.good.gooddev_web.search;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import javax.servlet.http.HttpSession;
-
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import io.good.gooddev_web.board.dto.BoardDTO;
 import io.good.gooddev_web.board.service.BoardService;
@@ -23,20 +22,14 @@ import lombok.extern.slf4j.Slf4j;
 public class SearchController {
     private final BoardService boardService;
 
-    @PostMapping("/search")
-    public String serachPost(String keyword,Model model,RedirectAttributes redirectAttributes,PageRequestDTO pageRequestDTO, HttpSession session){
-        if (keyword == null) {
-            redirectAttributes.addFlashAttribute("message", "검색어를 입력해 주세요");
-            redirectAttributes.addAttribute("keyword", keyword);
-            return "redirect:/";
-		} else if (keyword.length() < 2){
-            redirectAttributes.addFlashAttribute("message", "검색어를 2글자 이상 입력해 주세요");
-            redirectAttributes.addAttribute("keyword", keyword);
-            return "redirect:/";
-		}
+    @GetMapping("/api/search")
+    public ResponseEntity<Map<String,Object>> serachPost(@RequestParam(required = false) String keyword){
+        Map<String,Object> response = new HashMap<>();
+        PageRequestDTO pageRequestDTO = new PageRequestDTO();
+        pageRequestDTO.setKeyword(keyword);
+        pageRequestDTO.setSize(4);
         HashMap<String,List<BoardDTO>> totalMap = boardService.getTotalList(pageRequestDTO);
-		model.addAttribute("totalMap",totalMap);
-		model.addAttribute("pageRequestDTO", pageRequestDTO);
-        return "search";
+		response.put("totalMap",totalMap);
+        return ResponseEntity.ok(response);
     }
 }

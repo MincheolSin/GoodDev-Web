@@ -13,7 +13,7 @@
         integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
         crossorigin="anonymous">
     <style>
-        body {
+        .login-body {
             background-color: #f8f9fa; /* 배경 색상 */
             height: 100vh; /* 전체 화면 높이 */
             display: flex; /* Flexbox 활성화 */
@@ -49,7 +49,7 @@
         }
     </style>
 </head>
-<body>
+<body class="login-body">
     <div class="login-container">
         <h2>굿 로그인</h2>
         <div>

@@ -152,7 +152,7 @@
 		WHERE ROWNUM &lt; 10
 	</select>
 	
-	<update id="update">
+	<update id="update" >
 		update good_board set title = #{title}, content = #{content} where bno = #{bno}
 	</update>
 	

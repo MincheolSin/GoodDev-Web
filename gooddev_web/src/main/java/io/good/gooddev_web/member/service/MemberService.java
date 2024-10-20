@@ -64,17 +64,6 @@ public class MemberService {
 
   }
   
-  // 회원 정보 유효성 검사 메소드
-  private boolean isValidRegisterMember(MemberVO member) {
-      return member != null // 존재할 경우
-          && isNotBlank(member.getMid())          //공백 체크
-          && isNotBlank(member.getPassword())
-          && isNotBlank(member.getMember_name())
-          && isNotBlank(member.getEmail())
-          && isEmailValid(member.getEmail())
-          && !checkIdDuplicate(member.getMid()); // ID중복체크
-  }
-  
   // 문자열이 null이 아니고 비어있지 않은지 확인하는 헬퍼 메소드
   private boolean isNotBlank(String str) {
       return str != null && !str.trim().isEmpty();
@@ -94,26 +83,17 @@ public class MemberService {
 
     //아이디 중복 체크
   public boolean checkIdDuplicate(String mid) {
-    return memberDAO.getRead(mid).isPresent(); // 아이디가 존재하면 True, 없으면 False 리턴
+    return memberDAO.checkIdDuplicate(mid)==1; // 아이디가 존재하면 True, 없으면 False 리턴
   } 
-  //   public boolean isIdDuplicate(String mid) {
-  //     return memberDAO.checkIdDuplicate(mid) > 0;
-  // }
-    // 아이디 정규식 검사
-    public boolean isIdValid(String mid) {
-        return memberDAO.IdValidatorREGEX(mid);
-    }
+ 
 
   //이메일 중복 체크
   public boolean checkEmailDuplicate(String email){
-    return memberDAO.getRead(email).isPresent(); //이메일이 존재하면 Treu, 없으면 False 리턴
+    
+    return memberDAO.checkEmailDuplicate(email)==1; //이메일이 존재하면 True, 없으면 False 리턴
     
   }
-  //이메일 정규식 검사
-  public boolean isEmailValid(String email) {
-      return memberDAO.emailValidatorREGEX(email);
-  }
-    
+
     //비밀번호찾기
   public int findPassword(String mid,String email,String newPassword) {
       // 이메일로 검증

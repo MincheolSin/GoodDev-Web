@@ -88,34 +88,38 @@ public class BoardService {
     public int insert(final BoardVO boardVO) {
         try{
             final int result = boardDAO.insert(boardVO);
-            for (MultipartFile file : boardVO.getFile()) {
-                if (file.getSize() != 0) {
-                    //유일한 파일명 생성
-                    String fid = UUID.randomUUID().toString();
-                    //첨부파일 저장
-                    try( BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(uploadPath + fid));
-                        BufferedInputStream bis = new BufferedInputStream(file.getInputStream());
-                    ){
-                        bis.transferTo(bos);
-                    }catch (IOException e) {
-                        throw new RuntimeException("File insert failed");
+            if (boardVO.getFile() !=null){
+                for (MultipartFile file : boardVO.getFile()) {
+                    if (file.getSize() != 0) {
+                        //유일한 파일명 생성
+                        String fid = UUID.randomUUID().toString();
+                        //첨부파일 저장
+                        try( BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(uploadPath + fid));
+                            BufferedInputStream bis = new BufferedInputStream(file.getInputStream());
+                        ){
+                            bis.transferTo(bos);
+                        }catch (IOException e) {
+                            throw new RuntimeException("File insert failed");
+                        }
+                        BoardFileVO boardFileVO = new BoardFileVO();
+                        
+                        boardFileVO.setFid(fid);
+                        boardFileVO.setBno((int)boardVO.getBno());
+                        boardFileVO.setFile_name(file.getOriginalFilename());
+                        boardFileVO.setFile_type(file.getContentType());
+                        boardFileVO.setFile_size((int)file.getSize());
+                        final int resultFileInsert = boardFileDAO.insert(boardFileVO);
+                        if(resultFileInsert !=1 || result == -1) throw new RuntimeException("File insert failed");
                     }
-                    BoardFileVO boardFileVO = new BoardFileVO();
                     
-                    boardFileVO.setFid(fid);
-                    boardFileVO.setBno((int)boardVO.getBno());
-                    boardFileVO.setFile_name(file.getOriginalFilename());
-                    boardFileVO.setFile_type(file.getContentType());
-                    boardFileVO.setFile_size((int)file.getSize());
-                    final int resultFileInsert = boardFileDAO.insert(boardFileVO);
-                    if(resultFileInsert !=1 || result == -1) throw new RuntimeException("File insert failed");
                 }
-                
+                return result;
             }
-            return boardVO.getBno();
+            else return result;
         }catch(RuntimeException e){
             throw new RuntimeException("Transaction failed", e);
         }
+        
     }
     
     public void deleteFile(String fileName) {
@@ -190,10 +194,10 @@ public class BoardService {
 	}
 
     @Transactional
-    public int update(final BoardVO boardVO) {
+    public boolean update(final BoardVO boardVO) {
         try{
             boardFileDAO.delete(boardVO.getBno());
-            return boardDAO.update(boardVO);
+            return boardDAO.update(boardVO)==1;
         }catch(RuntimeException e){
             throw new RuntimeException("Transaction failed", e);
     }

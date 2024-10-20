@@ -5,98 +5,97 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     
 
 <!-- 모든 회원정보 조회 (활성화된 회원) -->
-<select id="getList" resultType="io.good.gooddev_web.member.vo.MemberVO">
-    <![CDATA[
-    SELECT * 
-    FROM (
-        SELECT A.*, ROWNUM rnum 
+    <select id="getList" resultType="io.good.gooddev_web.member.vo.MemberVO">
+        <![CDATA[
+        SELECT * 
         FROM (
-            SELECT * 
-            FROM good_member 
-            WHERE deleteYn = 'N'
-            ORDER BY mid
-        ) A 
-        WHERE ROWNUM <= #{page} * #{size}
-    ) 
-    WHERE rnum > (#{page} - 1) * #{size}
-    ]]>
-</select>
+            SELECT A.*, ROWNUM rnum 
+            FROM (
+                SELECT * 
+                FROM good_member 
+                WHERE deleteYn = 'N'
+                ORDER BY mid
+            ) A 
+            WHERE ROWNUM <= #{page} * #{size}
+        ) 
+        WHERE rnum > (#{page} - 1) * #{size}
+        ]]>
+    </select>
 
-<!-- 회원 상세조회 (활성화된 회원) -->
-<select id="getRead" parameterType="String" resultType="io.good.gooddev_web.member.vo.MemberVO">
-    SELECT *
-    FROM good_member
-    WHERE mid = #{mid} AND deleteYn = 'N'
-</select>
-
-<!-- 회원탈퇴 -->
-<delete id="remove">
-    UPDATE good_member
-    SET deleteYn = 'Y'
-    WHERE mid = #{mid}
-</delete>
-
-<!-- 회원정보 수정 -->
-<update id="modify">
-    UPDATE good_member
-    SET password = #{password},
-        member_name = #{member_name},
-        nickname = #{nickname},
-        phone = #{phone},
-        email = #{email}
-    WHERE mid = #{mid} AND deleteYn = 'N'
-</update>
-
-<!-- 회원가입 -->
-<insert id="register">
-    INSERT INTO 
-        good_member (mid, password, member_name, nickname, email, phone)
-    VALUES
-            (#{mid}, #{password}, #{member_name}, #{nickname}, #{email}, #{phone})
-</insert>
-
-<!-- 전체 회원 수 조회 -->
-<select id="getTotalCount" resultType="int">
-    SELECT COUNT(*)
-    FROM good_member
-    WHERE deleteYn = 'N' 
-</select>
-
-<!-- 자동로그인-->
-<update id="modify_Auto_Login">
-    UPDATE good_member
-    SET auto_Login = #{auto_Login}
-    WHERE mid = #{mid} AND deleteYn = 'N'
-</update>
-
-<!-- 아이디찾기 -->
-<select id="findIdByEmail" resultType="io.good.gooddev_web.member.vo.MemberVO">
-    SELECT mid 
-    FROM good_member 
-    WHERE email = #{email} 
-    AND deleteYn = 'N'
-</select>
-
-
-<select id="getRead_Auto_Login" resultType="io.good.gooddev_web.member.vo.MemberVO"> 
-    SELECT * 
-    FROM good_member 
-    WHERE auto_Login = #{auto_Login} AND deleteYn = 'N'
-</select>
-
-<!-- 아이디 중복 체크 -->
-<select id="checkIdDuplicate" resultType="int">
-    SELECT COUNT(*)
-    FROM good_member
-    WHERE mid = #{mid} AND deleteYn = 'N'
-</select>
-
-
-<!-- 이메일 유효성 검사 -->
-    <select id="checkEmailDuplicate" parameterType="String" resultType="boolean">
-        SELECT COUNT(*) > 0
+    <!-- 회원 상세조회 (활성화된 회원) -->
+    <select id="getRead" parameterType="String" resultType="io.good.gooddev_web.member.vo.MemberVO">
+        SELECT *
         FROM good_member
-        WHERE email = #{email}
+        WHERE mid = #{mid} AND deleteYn = 'N'
+    </select>
+
+    <!-- 회원탈퇴 -->
+    <delete id="remove">
+        UPDATE good_member
+        SET deleteYn = 'Y'
+        WHERE mid = #{mid}
+    </delete>
+
+    <!-- 회원정보 수정 -->
+    <update id="modify">
+        UPDATE good_member
+        SET password = #{password},
+            member_name = #{member_name},
+            nickname = #{nickname},
+            phone = #{phone},
+            email = #{email}
+        WHERE mid = #{mid} AND deleteYn = 'N'
+    </update>
+
+    <!-- 회원가입 -->
+    <insert id="register">
+        INSERT INTO 
+            good_member (mid, password, member_name, nickname, email, phone)
+        VALUES
+                (#{mid}, #{password}, #{member_name}, #{nickname}, #{email}, #{phone})
+    </insert>
+
+    <!-- 전체 회원 수 조회 -->
+    <select id="getTotalCount" resultType="int">
+        SELECT COUNT(*)
+        FROM good_member
+        WHERE deleteYn = 'N' 
+    </select>
+
+    <!-- 자동로그인-->
+    <update id="modify_Auto_Login">
+        UPDATE good_member
+        SET auto_Login = #{auto_Login}
+        WHERE mid = #{mid} AND deleteYn = 'N'
+    </update>
+
+    <!-- 아이디찾기 -->
+    <select id="findIdByEmail" resultType="io.good.gooddev_web.member.vo.MemberVO">
+        SELECT mid 
+        FROM good_member 
+        WHERE email = #{email} 
         AND deleteYn = 'N'
+    </select>
+
+
+    <select id="getRead_Auto_Login" resultType="io.good.gooddev_web.member.vo.MemberVO"> 
+        SELECT * 
+        FROM good_member 
+        WHERE auto_Login = #{auto_Login} AND deleteYn = 'N'
+    </select>
+
+    <!-- 아이디 중복 체크 -->
+    <select id="checkIdDuplicate" resultType="int">
+        SELECT COUNT(*)
+        FROM good_member
+        WHERE mid = #{mid} AND deleteYn = 'N'
+    </select>
+
+
+    <!-- 이메일 유효성 검사 -->
+    <select id="checkEmailDuplicate" resultType="int">
+        SELECT COUNT(*)
+        FROM good_member
+        WHERE email = #{email} AND deleteYn = 'N'
     </select>
 </mapper>

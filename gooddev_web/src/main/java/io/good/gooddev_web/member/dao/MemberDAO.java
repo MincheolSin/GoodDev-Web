@@ -23,10 +23,8 @@ public interface MemberDAO {
   MemberDTO getLogin(MemberDTO inMember);  // 로그인 처리
   int modify_uuid(MemberVO modify_uuid);  // UUID 수정
   Optional<MemberVO> findIdByEmail(String email);  // 이메일로 아이디 찾기
-  Boolean checkIdDuplicate(String mid);  // 아이디 중복 체크 (존재하는지)
-  Boolean IdValidatorREGEX(String mid);  // 아이디 정규식 검증
-  Boolean checkEmailDuplicate(String email); //이메일 중복 체크 (존재하는지)
-  Boolean emailValidatorREGEX(String email);  // 이메일 정규식 검증
+  int checkIdDuplicate(String mid);  // 아이디 중복 체크 (존재하는지) 
+  int checkEmailDuplicate(String email); //이메일 중복 체크 (존재하는지)
   int resetPassword(String newPassword);  // 비밀번호 재설정
  
   

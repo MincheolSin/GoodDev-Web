@@ -12,9 +12,9 @@
                     <tr class="top10-item">
                         <td class="top10-rank">${status.index + 1}</td>
                         <td class="top10-title">
-                            <a href="#" class="top10-link" data-board-bno="${board.bno}" data-page="${pageResponse.page}" data-link="${pageRequestDTO.link}">
-                                ${board.title}
-                            </a>
+                            <div class="td-link">
+                                <a @click.stop.prevent="openReadModal(board.bno)">{{ board.title }}</a>
+                            </div>
                         </td>
                     </tr>
                 </c:forEach>
